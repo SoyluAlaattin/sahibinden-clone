@@ -1,3 +1,6 @@
+'use client'
+
+import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import AdCard from '@/components/AdCard'
 import { 
@@ -10,6 +13,8 @@ import {
   Search,
   Filter
 } from 'lucide-react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // Mock data
 const categories = [
@@ -112,14 +117,27 @@ function CategoryCard({ name, href, count, color, iconIndex }: {
 }
 
 export default function Home() {
+  const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('All Categories')
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (searchQuery.trim()) {
+      params.set('q', searchQuery.trim())
+    }
+    if (selectedCategory && selectedCategory !== 'All Categories') {
+      params.set('category', selectedCategory)
+    }
+    
+    const searchUrl = `/search?${params.toString()}`
+    router.push(searchUrl)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Simple header for testing */}
-      <header className="bg-white shadow-sm border-b p-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-blue-600">Sahibinden Clone</h1>
-        </div>
-      </header>
+      <Header />
       
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
@@ -134,7 +152,7 @@ export default function Home() {
             
             {/* Search Section */}
             <div className="max-w-3xl mx-auto">
-              <div className="bg-white rounded-lg p-6 shadow-lg">
+              <form onSubmit={handleSearch} className="bg-white rounded-lg p-6 shadow-lg">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1">
                     <div className="relative">
@@ -142,12 +160,18 @@ export default function Home() {
                       <input
                         type="text"
                         placeholder="What are you looking for?"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select 
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
                       <option>All Categories</option>
                       <option>Real Estate</option>
                       <option>Vehicles</option>
@@ -157,11 +181,14 @@ export default function Home() {
                       <option>Services</option>
                     </select>
                   </div>
-                  <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold">
+                  <button 
+                    type="submit"
+                    className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold"
+                  >
                     Search
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>
