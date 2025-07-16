@@ -19,17 +19,17 @@ export default function Header() {
   return (
     <header className="bg-white shadow-sm border-b">
       {/* Top bar */}
-      <div className="bg-primary-600 text-white py-2">
+      <div className="bg-blue-600 text-white py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center text-sm">
             <div className="flex space-x-4">
-              <Link href="/" className="hover:text-primary-200">Home</Link>
-              <Link href="/about" className="hover:text-primary-200">About</Link>
-              <Link href="/contact" className="hover:text-primary-200">Contact</Link>
+              <Link href="/" className="hover:text-blue-200">Home</Link>
+              <Link href="/about" className="hover:text-blue-200">About</Link>
+              <Link href="/contact" className="hover:text-blue-200">Contact</Link>
             </div>
             <div className="flex space-x-4">
-              <Link href="/login" className="hover:text-primary-200">Login</Link>
-              <Link href="/register" className="hover:text-primary-200">Register</Link>
+              <Link href="/login" className="hover:text-blue-200">Login</Link>
+              <Link href="/register" className="hover:text-blue-200">Register</Link>
             </div>
           </div>
         </div>
@@ -40,7 +40,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <div className="text-2xl font-bold text-primary-600">Sahibinden</div>
+            <div className="text-2xl font-bold text-blue-600">Sahibinden</div>
           </Link>
 
           {/* Search bar */}
@@ -49,7 +49,7 @@ export default function Header() {
               <input
                 type="text"
                 placeholder="Search for anything..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
@@ -57,24 +57,24 @@ export default function Header() {
 
           {/* User actions */}
           <div className="flex items-center space-x-4">
-            <button className="p-2 text-gray-600 hover:text-primary-600">
+            <button className="p-2 text-gray-600 hover:text-blue-600">
               <Heart className="h-6 w-6" />
             </button>
-            <button className="p-2 text-gray-600 hover:text-primary-600">
+            <button className="p-2 text-gray-600 hover:text-blue-600">
               <Bell className="h-6 w-6" />
             </button>
-            <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center space-x-2">
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2">
               <Plus className="h-5 w-5" />
               <span>Post Ad</span>
             </button>
-            <button className="p-2 text-gray-600 hover:text-primary-600">
+            <button className="p-2 text-gray-600 hover:text-blue-600">
               <User className="h-6 w-6" />
             </button>
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="lg:hidden p-2 text-gray-600 hover:text-primary-600"
+            className="lg:hidden p-2 text-gray-600 hover:text-blue-600"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             <Menu className="h-6 w-6" />
@@ -87,7 +87,7 @@ export default function Header() {
             <Link
               key={category.name}
               href={category.href}
-              className="text-gray-600 hover:text-primary-600 font-medium"
+              className="text-gray-600 hover:text-blue-600 font-medium"
             >
               {category.name}
             </Link>
@@ -103,7 +103,7 @@ export default function Header() {
               <Link
                 key={category.name}
                 href={category.href}
-                className="block py-2 text-gray-600 hover:text-primary-600"
+                className="block py-2 text-gray-600 hover:text-blue-600"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {category.name}

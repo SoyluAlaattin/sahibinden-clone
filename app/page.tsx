@@ -1,7 +1,7 @@
 import Footer from '@/components/Footer'
 import AdCard from '@/components/AdCard'
 import { 
-  Home, 
+  Home as HomeIcon, 
   Car, 
   Smartphone, 
   Sofa, 
@@ -88,13 +88,13 @@ function CategoryCard({ name, href, count, color, iconIndex }: {
 }) {
   const getIcon = (index: number) => {
     switch (index) {
-      case 0: return <Home className="h-8 w-8 text-white" />
+      case 0: return <HomeIcon className="h-8 w-8 text-white" />
       case 1: return <Car className="h-8 w-8 text-white" />
       case 2: return <Smartphone className="h-8 w-8 text-white" />
       case 3: return <Sofa className="h-8 w-8 text-white" />
       case 4: return <Briefcase className="h-8 w-8 text-white" />
       case 5: return <Wrench className="h-8 w-8 text-white" />
-      default: return <Home className="h-8 w-8 text-white" />
+      default: return <HomeIcon className="h-8 w-8 text-white" />
     }
   }
 

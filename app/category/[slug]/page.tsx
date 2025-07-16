@@ -1,7 +1,7 @@
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import AdCard from '@/components/AdCard'
-import { Filter, SortAsc, Grid, List, Home, Car, Smartphone, Sofa, Briefcase, Wrench } from 'lucide-react'
+import { Filter, SortAsc, Grid, List, Home as HomeIcon, Car, Smartphone, Sofa, Briefcase, Wrench } from 'lucide-react'
 
 interface CategoryPageProps {
   params: {
@@ -129,7 +129,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   const category = getCategoryData(params.slug)
 
   // Optionally, you can show an icon for the category using a mapping here if needed
-  // const iconMap = { 'Real Estate': Home, Vehicles: Car, Electronics: Smartphone };
+  // const iconMap = { 'Real Estate': HomeIcon, Vehicles: Car, Electronics: Smartphone };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -153,7 +153,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-4">
-              <button className="flex items-center space-x-2 text-gray-600 hover:text-primary-600">
+              <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600">
                 <Filter className="h-5 w-5" />
                 <span>Filters</span>
               </button>
@@ -171,10 +171,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
             <div className="flex items-center space-x-2">
               <span className="text-gray-600 text-sm">{category.ads.length} ads found</span>
               <div className="flex border border-gray-300 rounded">
-                <button className="p-2 text-primary-600 bg-primary-50">
+                <button className="p-2 text-blue-600 bg-blue-50">
                   <Grid className="h-4 w-4" />
                 </button>
-                <button className="p-2 text-gray-400 hover:text-primary-600">
+                <button className="p-2 text-gray-400 hover:text-blue-600">
                   <List className="h-4 w-4" />
                 </button>
               </div>
@@ -200,7 +200,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
         {/* Load More */}
         <div className="text-center mt-12">
-          <button className="bg-primary-600 text-white px-8 py-3 rounded-lg hover:bg-primary-700 font-semibold">
+          <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold">
             Load More Ads
           </button>
         </div>
