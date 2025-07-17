@@ -4,7 +4,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import AdCard from '@/components/AdCard'
 import { Filter, SortAsc, Grid, List, Home as HomeIcon, Car, Smartphone, Sofa, Briefcase, Wrench } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface CategoryPageProps {
   params: {
@@ -12,124 +12,68 @@ interface CategoryPageProps {
   }
 }
 
-// Mock category data
-const getCategoryData = (slug: string) => {
+// Category mapping
+const getCategoryInfo = (slug: string) => {
   const categories = {
     'real-estate': {
       name: 'Real Estate',
       description: 'Find your dream home, apartment, or commercial property',
-      ads: [
-        {
-          id: '1',
-          title: 'Modern 3-Bedroom Apartment in Istanbul',
-          price: '₺2,500,000',
-          location: 'Istanbul, Turkey',
-          image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
-          category: 'Real Estate',
-          postedDate: '2 hours ago',
-        },
-        {
-          id: '2',
-          title: 'Luxury Villa with Sea View',
-          price: '₺5,200,000',
-          location: 'Antalya, Turkey',
-          image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&h=300&fit=crop',
-          category: 'Real Estate',
-          postedDate: '1 day ago',
-        },
-        {
-          id: '3',
-          title: 'Office Space in Business District',
-          price: '₺1,800,000',
-          location: 'Ankara, Turkey',
-          image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop',
-          category: 'Real Estate',
-          postedDate: '3 hours ago',
-        },
-        {
-          id: '4',
-          title: 'Studio Apartment for Rent',
-          price: '₺8,500/month',
-          location: 'Izmir, Turkey',
-          image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
-          category: 'Real Estate',
-          postedDate: '5 hours ago',
-        },
-        {
-          id: '5',
-          title: 'Family House with Garden',
-          price: '₺3,800,000',
-          location: 'Bursa, Turkey',
-          image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop',
-          category: 'Real Estate',
-          postedDate: '1 day ago',
-        },
-        {
-          id: '6',
-          title: 'Penthouse with Terrace',
-          price: '₺4,500,000',
-          location: 'Istanbul, Turkey',
-          image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop',
-          category: 'Real Estate',
-          postedDate: '4 hours ago',
-        },
-      ]
+      elasticsearchCategory: 'Real Estate'
     },
     'vehicles': {
       name: 'Vehicles',
       description: 'Cars, motorcycles, boats, and other vehicles for sale',
-      ads: [
-        {
-          id: '7',
-          title: '2020 BMW 3 Series - Excellent Condition',
-          price: '₺850,000',
-          location: 'Ankara, Turkey',
-          image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop',
-          category: 'Vehicles',
-          postedDate: '1 day ago',
-        },
-        {
-          id: '8',
-          title: '2018 Mercedes C-Class',
-          price: '₺720,000',
-          location: 'Istanbul, Turkey',
-          image: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400&h=300&fit=crop',
-          category: 'Vehicles',
-          postedDate: '2 days ago',
-        },
-      ]
+      elasticsearchCategory: 'Vehicles'
     },
     'electronics': {
       name: 'Electronics',
       description: 'Latest gadgets, computers, and electronic devices',
-      ads: [
-        {
-          id: '9',
-          title: 'iPhone 15 Pro Max - 256GB',
-          price: '₺45,000',
-          location: 'Izmir, Turkey',
-          image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=300&fit=crop',
-          category: 'Electronics',
-          postedDate: '3 hours ago',
-        },
-        {
-          id: '10',
-          title: 'MacBook Pro M2 - 14 inch',
-          price: '₺65,000',
-          location: 'Istanbul, Turkey',
-          image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=300&fit=crop',
-          category: 'Electronics',
-          postedDate: '1 day ago',
-        },
-      ]
+      elasticsearchCategory: 'Electronics'
     }
   }
   
   return categories[slug as keyof typeof categories] || categories['real-estate']
 }
 
+// Fetch ads from Elasticsearch
+const fetchAdsFromElasticsearch = async (category: string, searchQuery?: string) => {
+  try {
+    const params = new URLSearchParams({
+      type: 'category',
+      category: category
+    })
+    
+    if (searchQuery) {
+      params.append('q', searchQuery)
+    }
+    
+    const response = await fetch(`/api/elasticsearch/search?${params}`)
+    const data = await response.json()
+    
+    if (response.ok) {
+      return data.ads.map((ad: any) => ({
+        ...ad,
+        price: `₺${ad.price.toLocaleString()}`,
+        postedDate: new Date(ad.postedDate).toLocaleDateString('tr-TR', {
+          day: 'numeric',
+          month: 'short'
+        })
+      }))
+    } else {
+      console.error('Elasticsearch error:', data.error)
+      return []
+    }
+  } catch (error) {
+    console.error('Failed to fetch ads:', error)
+    return []
+  }
+}
+
 export default function CategoryPage({ params }: CategoryPageProps) {
-  const category = getCategoryData(params.slug)
+  const categoryInfo = getCategoryInfo(params.slug)
+  const [ads, setAds] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Filter/Sort state
   const [showFilters, setShowFilters] = useState(false)
@@ -138,6 +82,18 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   const [sortBy, setSortBy] = useState('Latest')
   const [selectedLocation, setSelectedLocation] = useState('All Locations')
   const [postedDate, setPostedDate] = useState('Any time')
+
+  // Load ads from Elasticsearch
+  useEffect(() => {
+    const loadAds = async () => {
+      setLoading(true)
+      const fetchedAds = await fetchAdsFromElasticsearch(categoryInfo.elasticsearchCategory, searchQuery)
+      setAds(fetchedAds)
+      setLoading(false)
+    }
+    
+    loadAds()
+  }, [categoryInfo.elasticsearchCategory, searchQuery])
 
   // Helper to parse price string to number
   const parsePrice = (price: string) => {
@@ -162,11 +118,11 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   }
 
   // Unique locations for filter dropdown
-  const locations = ['All Locations', ...Array.from(new Set(category.ads.map(ad => ad.location)))]
+  const locations = ['All Locations', ...Array.from(new Set(ads.map((ad: any) => ad.location)))]
   const postedDateOptions = ['Any time', 'Last 24 hours', 'Last 7 days']
 
   // Filter and sort ads
-  let filteredAds = category.ads.filter(ad => {
+  let filteredAds = ads.filter((ad: any) => {
     const priceValue = parsePrice(ad.price)
     const matchesMin = minPrice === '' || priceValue >= Number(minPrice)
     const matchesMax = maxPrice === '' || priceValue <= Number(maxPrice)
@@ -176,11 +132,11 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   })
 
   if (sortBy === 'Price: Low to High') {
-    filteredAds = [...filteredAds].sort((a, b) => parsePrice(a.price) - parsePrice(b.price))
+    filteredAds = [...filteredAds].sort((a: any, b: any) => parsePrice(a.price) - parsePrice(b.price))
   } else if (sortBy === 'Price: High to Low') {
-    filteredAds = [...filteredAds].sort((a, b) => parsePrice(b.price) - parsePrice(a.price))
+    filteredAds = [...filteredAds].sort((a: any, b: any) => parsePrice(b.price) - parsePrice(a.price))
   } else if (sortBy === 'Latest') {
-    filteredAds = [...filteredAds].sort((a, b) => Number(b.id) - Number(a.id))
+    filteredAds = [...filteredAds].sort((a: any, b: any) => Number(b.id) - Number(a.id))
   }
 
   return (
@@ -191,12 +147,30 @@ export default function CategoryPage({ params }: CategoryPageProps) {
         <nav className="text-sm text-gray-500 mb-6">
           <span>Home</span>
           <span className="mx-2">›</span>
-          <span className="text-gray-900">{category.name}</span>
+          <span className="text-gray-900">{categoryInfo.name}</span>
         </nav>
         {/* Category Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{category.name}</h1>
-          <p className="text-gray-600">{category.description}</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{categoryInfo.name}</h1>
+          <p className="text-gray-600">{categoryInfo.description}</p>
+          
+          {/* Search Box */}
+          <div className="mt-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={`Search in ${categoryInfo.name.toLowerCase()}...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {loading && (
+                <div className="absolute right-3 top-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         {/* Filters and Sort */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
