@@ -141,4 +141,4 @@ If you have any questions or need help with deployment, feel free to open an iss
 
 ---
 
-Built with ❤️ using Next.js and Tailwind CSS
+Built with ❤️ using Next.js and Tailwind CSS 
