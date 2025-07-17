@@ -73,7 +73,7 @@ export default function TestElasticsearchPage() {
               placeholder="Search ads..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded text-black placeholder-gray-500"
             />
             <button
               onClick={searchAds}
