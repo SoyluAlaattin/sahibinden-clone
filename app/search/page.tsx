@@ -201,7 +201,7 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600">Sort by:</span>
                 <select
-                  className="border border-gray-300 rounded px-3 py-1 text-sm"
+                  className="border border-gray-300 rounded px-3 py-1 text-sm text-black bg-white"
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value)}
                 >
