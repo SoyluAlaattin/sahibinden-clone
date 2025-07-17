@@ -121,6 +121,64 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All Categories')
 
+  // Filter/Sort state
+  const [showFilters, setShowFilters] = useState(false)
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
+  const [sortBy, setSortBy] = useState('Latest')
+  const [selectedLocation, setSelectedLocation] = useState('All Locations')
+  const [postedDate, setPostedDate] = useState('Any time')
+
+  // Helper to parse price string to number
+  const parsePrice = (price: string) => {
+    const match = price.match(/\d+[\d,.]*/)
+    if (!match) return 0
+    return Number(match[0].replace(/\./g, '').replace(/,/g, ''))
+  }
+
+  // Helper to check posted date
+  const isWithinPostedDate = (adPostedDate: string) => {
+    if (postedDate === 'Any time') return true
+    if (adPostedDate.includes('hour')) {
+      if (postedDate === 'Last 24 hours') return true
+      if (postedDate === 'Last 7 days') return true
+    }
+    if (adPostedDate.includes('day')) {
+      const days = parseInt(adPostedDate)
+      if (postedDate === 'Last 24 hours') return days <= 1
+      if (postedDate === 'Last 7 days') return days <= 7
+    }
+    return false
+  }
+
+  // Unique categories and locations for filter dropdowns
+  const filterCategories = ['All Categories', ...Array.from(new Set(featuredAds.map(ad => ad.category)))]
+  const locations = ['All Locations', ...Array.from(new Set(featuredAds.map(ad => ad.location)))]
+  const postedDateOptions = ['Any time', 'Last 24 hours', 'Last 7 days']
+
+  // Filter and sort featured ads
+  let filteredAds = featuredAds.filter(ad => {
+    const matchesQuery = searchQuery === '' || 
+      ad.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ad.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ad.category.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = selectedCategory === 'All Categories' || selectedCategory === '' || ad.category === selectedCategory
+    const priceValue = parsePrice(ad.price)
+    const matchesMin = minPrice === '' || priceValue >= Number(minPrice)
+    const matchesMax = maxPrice === '' || priceValue <= Number(maxPrice)
+    const matchesLocation = selectedLocation === 'All Locations' || ad.location === selectedLocation
+    const matchesPostedDate = isWithinPostedDate(ad.postedDate)
+    return matchesQuery && matchesCategory && matchesMin && matchesMax && matchesLocation && matchesPostedDate
+  })
+
+  if (sortBy === 'Price: Low to High') {
+    filteredAds = [...filteredAds].sort((a, b) => parsePrice(a.price) - parsePrice(b.price))
+  } else if (sortBy === 'Price: High to Low') {
+    filteredAds = [...filteredAds].sort((a, b) => parsePrice(b.price) - parsePrice(a.price))
+  } else if (sortBy === 'Latest') {
+    filteredAds = [...filteredAds].sort((a, b) => Number(b.id) - Number(a.id))
+  }
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const params = new URLSearchParams()
@@ -220,19 +278,117 @@ export default function Home() {
       {/* Featured Ads Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Ads</h2>
               <p className="text-gray-600">Handpicked listings for you</p>
             </div>
-            <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-semibold">
-              <Filter className="h-5 w-5" />
-              <span>View All</span>
-            </button>
+            <div className="flex items-center space-x-4">
+              <button
+                className={`flex items-center space-x-2 font-semibold px-4 py-2 rounded transition-colors duration-200 ${showFilters ? 'bg-blue-600 text-white' : 'text-blue-600 hover:text-blue-700'}`}
+                onClick={() => setShowFilters(true)}
+              >
+                <Filter className="h-5 w-5" />
+                <span>Filters</span>
+              </button>
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-600">Sort by:</span>
+                <select
+                  className="border border-gray-300 rounded px-3 py-1 text-sm text-black bg-white"
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value)}
+                >
+                  <option>Latest</option>
+                  <option>Price: Low to High</option>
+                  <option>Price: High to Low</option>
+                  <option>Most Popular</option>
+                </select>
+              </div>
+            </div>
           </div>
-          
+          {/* Filter Modal */}
+          {showFilters && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+                <button
+                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowFilters(false)}
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+                <h2 className="text-lg font-semibold mb-4 text-black">Filters</h2>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-black mb-1">Category</label>
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                    value={selectedCategory}
+                    onChange={e => setSelectedCategory(e.target.value)}
+                  >
+                    {filterCategories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-black mb-1">Location</label>
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                    value={selectedLocation}
+                    onChange={e => setSelectedLocation(e.target.value)}
+                  >
+                    {locations.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-4 flex space-x-2">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-black mb-1">Min Price</label>
+                    <input
+                      type="number"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                      placeholder="0"
+                      value={minPrice}
+                      onChange={e => setMinPrice(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-black mb-1">Max Price</label>
+                    <input
+                      type="number"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                      placeholder="10000000"
+                      value={maxPrice}
+                      onChange={e => setMaxPrice(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-black mb-1">Posted Date</label>
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                    value={postedDate}
+                    onChange={e => setPostedDate(e.target.value)}
+                  >
+                    {postedDateOptions.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    onClick={() => setShowFilters(false)}
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredAds.map((ad) => (
+            {filteredAds.map((ad) => (
               <AdCard
                 key={ad.id}
                 id={ad.id}
