@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { initializeAdsIndex, bulkIndexAds } from '@/lib/ads-elasticsearch'
+import { createIndex, bulkIndex } from '@/lib/elasticsearch-http'
 
 // Mock ilan verileri
 const mockAds = [
@@ -58,7 +58,45 @@ const mockAds = [
 export async function POST() {
   try {
     // Index'i oluştur
-    const indexCreated = await initializeAdsIndex()
+    const indexCreated = await createIndex('ads', {
+      mappings: {
+        properties: {
+          id: { type: 'keyword' },
+          title: { 
+            type: 'text',
+            analyzer: 'standard',
+            fields: {
+              keyword: { type: 'keyword' }
+            }
+          },
+          description: { 
+            type: 'text',
+            analyzer: 'standard'
+          },
+          price: { 
+            type: 'float',
+            fields: {
+              keyword: { type: 'keyword' }
+            }
+          },
+          location: { 
+            type: 'text',
+            analyzer: 'standard',
+            fields: {
+              keyword: { type: 'keyword' }
+            }
+          },
+          category: { 
+            type: 'keyword'
+          },
+          image: { type: 'keyword' },
+          postedDate: { type: 'date' },
+          createdAt: { type: 'date' },
+          updatedAt: { type: 'date' }
+        }
+      }
+    })
+    
     if (!indexCreated) {
       return NextResponse.json(
         { error: 'Index oluşturulamadı' },
@@ -67,7 +105,16 @@ export async function POST() {
     }
 
     // Mock verileri indeksle
-    const bulkResult = await bulkIndexAds(mockAds)
+    const operations = mockAds.flatMap(ad => [
+      { index: { _index: 'ads', _id: ad.id } },
+      {
+        ...ad,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ])
+
+    const bulkResult = await bulkIndex(operations)
     if (!bulkResult) {
       return NextResponse.json(
         { error: 'Veriler indekslenemedi' },

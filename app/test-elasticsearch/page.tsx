@@ -1,6 +1,8 @@
 "use client";
 import { useState } from 'react'
 
+// Client-side safe component
+
 export default function TestElasticsearchPage() {
   const [status, setStatus] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])

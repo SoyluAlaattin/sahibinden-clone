@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { searchAds, searchAdsByCategory, searchAdsByPriceRange, searchAdsByLocation, getAllAds } from '@/lib/ads-elasticsearch'
+import { searchDocuments } from '@/lib/elasticsearch-http'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,9 +11,9 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get('maxPrice')
     const type = searchParams.get('type') || 'general'
 
-    let result
+    let searchQuery: any
 
-    // Arama tipine göre farklı fonksiyonlar kullan
+    // Arama tipine göre farklı query'ler oluştur
     switch (type) {
       case 'category':
         if (!category) {
@@ -22,7 +22,29 @@ export async function GET(request: NextRequest) {
             { status: 400 }
           )
         }
-        result = await searchAdsByCategory(category, query)
+        searchQuery = {
+          query: {
+            bool: {
+              must: [
+                { term: { category: category } }
+              ]
+            }
+          },
+          sort: [
+            { createdAt: { order: 'desc' } }
+          ],
+          size: 50
+        }
+        
+        if (query) {
+          searchQuery.query.bool.must.push({
+            multi_match: {
+              query: query,
+              fields: ['title^2', 'description', 'location'],
+              fuzziness: 'AUTO'
+            }
+          })
+        }
         break
 
       case 'price-range':
@@ -32,7 +54,20 @@ export async function GET(request: NextRequest) {
             { status: 400 }
           )
         }
-        result = await searchAdsByPriceRange(Number(minPrice), Number(maxPrice))
+        searchQuery = {
+          query: {
+            range: {
+              price: {
+                gte: Number(minPrice),
+                lte: Number(maxPrice)
+              }
+            }
+          },
+          sort: [
+            { price: { order: 'asc' } }
+          ],
+          size: 50
+        }
         break
 
       case 'location':
@@ -42,24 +77,78 @@ export async function GET(request: NextRequest) {
             { status: 400 }
           )
         }
-        result = await searchAdsByLocation(location)
+        searchQuery = {
+          query: {
+            match: {
+              location: location
+            }
+          },
+          sort: [
+            { createdAt: { order: 'desc' } }
+          ],
+          size: 50
+        }
         break
 
       case 'all':
-        result = await getAllAds()
+        searchQuery = {
+          query: {
+            match_all: {}
+          },
+          sort: [
+            { createdAt: { order: 'desc' } }
+          ],
+          size: 100
+        }
         break
 
       default:
         // Genel arama
-        const filters: any = {}
-        if (category) filters.category = category
-        if (location) filters.location = location
-        if (minPrice) filters.minPrice = Number(minPrice)
-        if (maxPrice) filters.maxPrice = Number(maxPrice)
+        searchQuery = {
+          query: {
+            bool: {
+              must: [
+                {
+                  multi_match: {
+                    query: query,
+                    fields: ['title^2', 'description', 'location'],
+                    fuzziness: 'AUTO'
+                  }
+                }
+              ],
+              filter: []
+            }
+          },
+          sort: [
+            { _score: { order: 'desc' } },
+            { createdAt: { order: 'desc' } }
+          ],
+          size: 20
+        }
 
-        result = await searchAds(query, Object.keys(filters).length > 0 ? filters : undefined)
+        // Filtreleri ekle
+        if (category) {
+          searchQuery.query.bool.filter.push({
+            term: { category: category }
+          })
+        }
+        
+        if (location) {
+          searchQuery.query.bool.filter.push({
+            term: { 'location.keyword': location }
+          })
+        }
+        
+        if (minPrice || maxPrice) {
+          const rangeFilter: any = { price: {} }
+          if (minPrice) rangeFilter.price.gte = Number(minPrice)
+          if (maxPrice) rangeFilter.price.lte = Number(maxPrice)
+          searchQuery.query.bool.filter.push({ range: rangeFilter })
+        }
         break
     }
+
+    const result = await searchDocuments('ads', searchQuery)
 
     if (!result) {
       return NextResponse.json(

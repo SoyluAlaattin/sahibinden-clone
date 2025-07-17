@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "app/api/elasticsearch/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "ELASTICSEARCH_URL": "@elasticsearch_url"
+  }
+} 

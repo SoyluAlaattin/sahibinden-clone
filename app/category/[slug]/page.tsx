@@ -35,8 +35,8 @@ const getCategoryInfo = (slug: string) => {
   return categories[slug as keyof typeof categories] || categories['real-estate']
 }
 
-// Fetch ads from Elasticsearch
-const fetchAdsFromElasticsearch = async (category: string, searchQuery?: string) => {
+// Fetch ads from API (client-side safe)
+const fetchAdsFromAPI = async (category: string, searchQuery?: string) => {
   try {
     const params = new URLSearchParams({
       type: 'category',
@@ -60,7 +60,7 @@ const fetchAdsFromElasticsearch = async (category: string, searchQuery?: string)
         })
       }))
     } else {
-      console.error('Elasticsearch error:', data.error)
+      console.error('API error:', data.error)
       return []
     }
   } catch (error) {
@@ -83,11 +83,11 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   const [selectedLocation, setSelectedLocation] = useState('All Locations')
   const [postedDate, setPostedDate] = useState('Any time')
 
-  // Load ads from Elasticsearch
+  // Load ads from API
   useEffect(() => {
     const loadAds = async () => {
       setLoading(true)
-      const fetchedAds = await fetchAdsFromElasticsearch(categoryInfo.elasticsearchCategory, searchQuery)
+      const fetchedAds = await fetchAdsFromAPI(categoryInfo.elasticsearchCategory, searchQuery)
       setAds(fetchedAds)
       setLoading(false)
     }
